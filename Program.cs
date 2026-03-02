@@ -1,3 +1,4 @@
+using FloodApp;
 using FloodApp.Components;
 using FloodApp.Services;
 using FloodApp.State;
@@ -10,6 +11,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddSingleton<LocationService>();
 builder.Services.AddSingleton<AdminService>();
+builder.Services.AddSingleton<HistoricalFloodEventService>();
+builder.Services.AddSingleton<AgentLocatorService>();
 builder.Services.AddScoped<AppState>();
 builder.Services.AddSingleton<GeoJsonService>();
 builder.Services.AddSingleton<RiskService>();
@@ -35,6 +38,8 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.MapFloodCheckEndpoints();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

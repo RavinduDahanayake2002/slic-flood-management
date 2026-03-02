@@ -1,6 +1,22 @@
 @inherits LayoutComponentBase
 
 <div class="app-layout">
+    <!-- Global Slim Top Navbar -->
+    <header class="global-navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-accent">SLIC</span> Apps
+            </div>
+            <nav class="nav-links">
+                <NavLink href="/" Match="NavLinkMatch.All" class="nav-link">Home</NavLink>
+                <NavLink href="/location" class="nav-link">Risk App</NavLink>
+                <NavLink href="/history" class="nav-link">History</NavLink>
+                <NavLink href="/find-agent" class="nav-link">Find Agent</NavLink>
+                <NavLink href="/awareness" class="nav-link">Awareness</NavLink>
+            </nav>
+        </div>
+    </header>
+
     <main class="content page-enter">
         @Body
     </main>
@@ -9,11 +25,65 @@
 <style>
     .app-layout {
         min-height: 100vh;
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
+        background-color: var(--bg-primary, #0f172a);
+        color: var(--text-primary, #ffffff);
+        display: flex;
+        flex-direction: column;
     }
+    
+    .global-navbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        width: 100%;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0.75rem 2rem;
+    }
+
+    .nav-brand {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: white;
+        letter-spacing: 1px;
+    }
+
+    .brand-accent {
+        color: #2dd4bf;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .nav-link {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: color 0.2s, text-shadow 0.2s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        color: #2dd4bf;
+        text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+    }
+
     .content {
-        height: 100vh;
+        flex: 1;
         width: 100%;
         overflow-x: hidden;
     }

@@ -116,3 +116,74 @@ export function addShelterMarker(map, lat, lng, popupContent) {
     }
     window.shelterMarkers.push(marker);
 }
+
+// SLIC Agent Locator Functions
+export function addAgentMarker(map, lat, lng, type, popupContent) {
+    if (!window.agentMarkers) window.agentMarkers = [];
+
+    const isBranch = type === 'Branch';
+    const color = isBranch ? '#7c3aed' : '#06b6d4'; // Purple for Branch, Cyan for Agent
+    const iconStr = isBranch ? '🏢' : '👤';
+
+    const agentIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style='background-color:${color};width:28px;height:28px;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 6px rgba(0,0,0,0.4);'><span style='font-size:14px;'>${iconStr}</span></div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+    });
+
+    const marker = L.marker([lat, lng], { icon: agentIcon }).addTo(map);
+    if (popupContent) {
+        marker.bindPopup(popupContent);
+    }
+    window.agentMarkers.push(marker);
+}
+
+export function addUserLocation(map, lat, lng) {
+    if (window.userMarker) {
+        map.removeLayer(window.userMarker);
+    }
+
+    const userIcon = L.divIcon({
+        className: 'user-pulse-icon',
+        html: `<div style="width: 16px; height: 16px; border-radius: 50%; background-color: #3b82f6; outline: 3px solid white; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); animation: mapPulse 2s infinite;"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+    });
+
+    window.userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+    map.flyTo([lat, lng], 10, { animate: true, duration: 1.5 });
+}
+
+export function drawRouteLine(map, lat1, lng1, lat2, lng2) {
+    if (window.routeLine) {
+        map.removeLayer(window.routeLine);
+    }
+
+    var latlngs = [
+        [lat1, lng1],
+        [lat2, lng2]
+    ];
+
+    window.routeLine = L.polyline(latlngs, {
+        color: '#2dd4bf',
+        weight: 3,
+        dashArray: '5, 10',
+        opacity: 0.8
+    }).addTo(map);
+}
+
+export function clearAgentMap(map) {
+    if (window.agentMarkers) {
+        window.agentMarkers.forEach(m => map.removeLayer(m));
+        window.agentMarkers = [];
+    }
+    if (window.userMarker) {
+        map.removeLayer(window.userMarker);
+        window.userMarker = null;
+    }
+    if (window.routeLine) {
+        map.removeLayer(window.routeLine);
+        window.routeLine = null;
+    }
+}
