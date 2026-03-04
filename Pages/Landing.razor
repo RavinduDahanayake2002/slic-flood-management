@@ -28,6 +28,9 @@
             <button class="btn-secondary mt-3" @onclick="ReportDamage">
                 🚨 Report Damage / Claim
             </button>
+            <button class="btn-admin mt-3" @onclick="EnterAdmin">
+                ⚙️ Admin Dashboard
+            </button>
             <p class="tap-hint mt-2">Tap to continue</p>
         </div>
     </div>
@@ -42,6 +45,11 @@
     private void ReportDamage()
     {
         Nav.NavigateTo("/report-damage");
+    }
+
+    private void EnterAdmin()
+    {
+        Nav.NavigateTo("/admin");
     }
 }
 

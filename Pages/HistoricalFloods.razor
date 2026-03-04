@@ -1,0 +1,411 @@
+@page "/history"
+@using FloodApp.Services
+@inject HistoricalFloodEventService HistoryService
+@inject IJSRuntime JS
+
+<div class="history-page">
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Header -->
+        <div class="text-center mb-8 fade-in">
+            <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Sri Lanka Flood History</h1>
+            <p class="text-lg text-secondary">Documented major flood events from 1947 to present</p>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="glass-panel py-4 px-6 mb-8 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between fade-in" style="animation-delay: 0.1s;">
+            <div class="flex flex-wrap gap-4 w-full md:w-auto">
+                <select @bind="selectedProvince" class="form-select glass-input">
+                    <option value="All">All Provinces</option>
+                    <option value="Western">Western</option>
+                    <option value="Southern">Southern</option>
+                    <option value="Sabaragamuwa">Sabaragamuwa</option>
+                    <option value="Central">Central</option>
+                    <option value="Eastern">Eastern</option>
+                    <option value="Northern">Northern</option>
+                    <option value="North Western">North Western</option>
+                    <option value="North Central">North Central</option>
+                    <option value="Uva">Uva</option>
+                </select>
+
+                <select @bind="selectedYearRange" class="form-select glass-input">
+                    <option value="All">All Years</option>
+                    <option value="Before 2000">Before 2000</option>
+                    <option value="2000–2010">2000–2010</option>
+                    <option value="2011–2020">2011–2020</option>
+                    <option value="2020–Present">2020–Present</option>
+                </select>
+
+                <select @bind="selectedSeverity" class="form-select glass-input">
+                    <option value="All">All Severities</option>
+                    <option value="Catastrophic">Catastrophic</option>
+                    <option value="Major">Major</option>
+                    <option value="Moderate">Moderate</option>
+                </select>
+            </div>
+            
+            <button class="btn-ghost" @onclick="ResetFilters">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset Filters
+            </button>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Left Column: Timeline (60%) -->
+            <div class="w-full lg:w-3/5">
+                <div class="timeline-container">
+                    @if (!filteredEvents.Any())
+                    {
+                        <div class="text-center py-10 glass-panel rounded-xl">
+                            <p class="text-secondary">No flood events found matching your filters.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var evt in filteredEvents)
+                        {
+                            <div class="timeline-item slide-up">
+                                <div class="timeline-dot" style="background-color: @GetSeverityColor(evt.Severity)"></div>
+                                <div class="glass-panel p-6 rounded-xl relative overflow-hidden group hover:border-teal-500/30 transition-all duration-300">
+                                    <div class="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="@GetSeverityColor(evt.Severity)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3 -9l5 21l6 -16l3 4h2"/></svg>
+                                    </div>
+
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <span class="badge" style="border-color: @GetSeverityColor(evt.Severity); color: @GetSeverityColor(evt.Severity);">
+                                            @evt.Month @evt.Year
+                                        </span>
+                                        <h3 class="text-xl font-bold text-white">@evt.Name</h3>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        @foreach(var dist in evt.AffectedDistricts)
+                                        {
+                                            <span class="district-tag">@dist</span>
+                                        }
+                                    </div>
+                                    
+                                    <p class="text-slate-300 text-sm mb-4 leading-relaxed">
+                                        @evt.Description
+                                    </p>
+                                    
+                                    <div class="grid grid-cols-3 gap-4 border-t border-slate-700/50 pt-4 mt-auto">
+                                        <div>
+                                            <p class="text-xs text-secondary uppercase tracking-wider">Casualties</p>
+                                            <p class="font-semibold text-white">@evt.Deaths</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-secondary uppercase tracking-wider">Affected</p>
+                                            <p class="font-semibold text-white">@evt.AffectedPeople.ToString("N0")</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-secondary uppercase tracking-wider">Est. Damage</p>
+                                            <p class="font-semibold text-error">Rs. @(evt.DamageEstimateLKR / 1000000000.0)B</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Right Column: Stats Panel (40%) -->
+            <div class="w-full lg:w-2/5">
+                <div class="sticky top-24 flex flex-col gap-6 fade-in" style="animation-delay: 0.2s;">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="glass-panel p-5 rounded-xl text-center border-t-2 border-teal-500">
+                            <h4 class="text-sm text-secondary uppercase mb-1">Total Events</h4>
+                            <p class="text-3xl font-bold text-white">@totalCount</p>
+                        </div>
+                        <div class="glass-panel p-5 rounded-xl text-center border-t-2 border-primary">
+                            <h4 class="text-sm text-secondary uppercase mb-1">Most Affected</h4>
+                            <p class="text-xl font-bold text-white mt-2">@mostAffectedProv</p>
+                        </div>
+                    </div>
+
+                    @if (deadliestEvent != null)
+                    {
+                        <div class="glass-panel p-6 rounded-xl bg-gradient-to-br from-slate-800/80 to-red-900/20 border-l-4 border-error">
+                            <h4 class="text-sm text-secondary uppercase mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-error"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                Deadliest Flood on Record
+                            </h4>
+                            <p class="text-lg font-bold text-white mb-1">@deadliestEvent.Name</p>
+                            <p class="text-sm text-slate-300 line-clamp-2 mb-3">@deadliestEvent.Description</p>
+                            <div class="flex justify-between items-end border-t border-red-500/20 pt-3">
+                                <div>
+                                    <p class="text-xs text-red-300">Lives Lost</p>
+                                    <p class="text-xl font-bold text-error">@deadliestEvent.Deaths</p>
+                                </div>
+                                <span class="badge" style="border-color: #ef4444; color: #ef4444;">@deadliestEvent.Year</span>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="glass-panel p-6 rounded-xl">
+                        <h4 class="text-md font-semibold text-white mb-4">Decade Frequency</h4>
+                        <div class="h-48 w-full">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-xl cta-gradient text-center shadow-lg transform transition hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Is your property protected?</h3>
+                        <p class="text-slate-200 text-sm mb-6">Don't wait for history to repeat itself. Shield your home with SLIC Flood Cover.</p>
+                        <a href="/location" class="cta-btn block w-full">
+                            Get a Flood Quote Today
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<HistoricalFloodEvent> filteredEvents = new();
+    private string _selectedProvince = "All";
+    private string selectedProvince
+    {
+        get => _selectedProvince;
+        set { _selectedProvince = value; ApplyFilters(); }
+    }
+
+    private string _selectedYearRange = "All";
+    private string selectedYearRange
+    {
+        get => _selectedYearRange;
+        set { _selectedYearRange = value; ApplyFilters(); }
+    }
+
+    private string _selectedSeverity = "All";
+    private string selectedSeverity
+    {
+        get => _selectedSeverity;
+        set { _selectedSeverity = value; ApplyFilters(); }
+    }
+
+    private int totalCount;
+    private HistoricalFloodEvent? deadliestEvent;
+    private string mostAffectedProv = "";
+    private Dictionary<string, int> decFreq = new();
+
+    protected override void OnInitialized()
+    {
+        ApplyFilters();
+        
+        // Static stats calculation
+        totalCount = HistoryService.GetTotalEventsCount();
+        deadliestEvent = HistoryService.GetDeadliestEvent();
+        mostAffectedProv = HistoryService.GetMostAffectedProvince();
+        decFreq = HistoryService.GetDecadeFrequency();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && decFreq.Any())
+        {
+            var labels = decFreq.Keys.ToArray();
+            var values = decFreq.Values.ToArray();
+            await JS.InvokeVoidAsync("renderHistoryChart", "historyChart", labels, values);
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredEvents = HistoryService.GetFilteredEvents(selectedProvince, selectedYearRange, selectedSeverity);
+    }
+
+    private void ResetFilters()
+    {
+        _selectedProvince = "All";
+        _selectedYearRange = "All";
+        _selectedSeverity = "All";
+        ApplyFilters();
+    }
+
+    private string GetSeverityColor(string severity)
+    {
+        return severity switch
+        {
+            "Catastrophic" => "#ef4444", // Red
+            "Major" => "#eab308", // Yellow
+            "Moderate" => "#10b981", // Green
+            _ => "#94a3b8"
+        };
+    }
+}
+
+<style>
+    .history-page {
+        min-height: 100vh;
+        background-color: #0f172a;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(15, 118, 110, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(124, 58, 237, 0.1) 0px, transparent 50%);
+        padding-top: 1rem;
+        padding-bottom: 4rem;
+    }
+
+    .glass-panel {
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .glass-input {
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+        min-width: 160px;
+    }
+    
+    .glass-input:focus {
+        border-color: #2dd4bf;
+        box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
+    }
+    
+    .glass-input option {
+        background: #1e293b;
+        color: white;
+    }
+
+    .btn-ghost {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        color: #94a3b8;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+
+    .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+
+    /* Timeline */
+    .timeline-container {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, rgba(45, 212, 191, 0.5), rgba(124, 58, 237, 0.2));
+        border-radius: 1px;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        left: -2rem;
+        top: 1.5rem;
+        transform: translateX(-50%);
+        border: 3px solid #0f172a;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        border: 1px solid;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .district-tag {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+        background: rgba(148, 163, 184, 0.1);
+        color: #cbd5e1;
+        border-radius: 0.25rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .text-secondary { color: #94a3b8; }
+    .text-error { color: #ef4444; }
+    .text-primary { color: #7c3aed; }
+    .border-primary { border-color: #7c3aed; }
+
+    .cta-gradient {
+        background: linear-gradient(135deg, rgba(17, 94, 89, 0.8) 0%, rgba(13, 148, 136, 0.6) 100%);
+        border: 1px solid rgba(45, 212, 191, 0.3);
+    }
+
+    .cta-btn {
+        background: white;
+        color: #0d9488;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        text-align: center;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .cta-btn:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Animations */
+    .fade-in {
+        animation: fadeIn 0.8s ease-out forwards;
+        opacity: 0;
+    }
+
+    .slide-up {
+        animation: slideUp 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stagger timeline items */
+    .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+    .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+    .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+    .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+</style>

@@ -15,21 +15,24 @@
                    Placeholder="Select Province"
                    Items="@Provinces.Select(p => new AppSelect.SelectOption { Text = p.Name, Value = p.Id })"
                    SelectedValue="@AppState.SelectedProvinceId"
-                   SelectedValueChanged="@OnProvinceChanged" />
+                   SelectedValueChanged="@OnProvinceChanged" 
+                   Class="w-full" />
 
         <!-- District -->
         <AppSelect Label="District" 
                    Placeholder="Select District"
                    Items="@Districts.Select(d => new AppSelect.SelectOption { Text = d.Name, Value = d.Id })"
                    SelectedValue="@AppState.SelectedDistrictId"
-                   SelectedValueChanged="@OnDistrictChanged" />
+                   SelectedValueChanged="@OnDistrictChanged" 
+                   Class="w-full" />
 
-        <!-- Town -->
-        <AppSelect Label="Town" 
-                   Placeholder="Select Town"
-                   Items="@Towns.Select(t => new AppSelect.SelectOption { Text = t.Name, Value = t.Id })"
-                   SelectedValue="@AppState.SelectedTownId"
-                   SelectedValueChanged="@OnTownChanged" />
+        <!-- Division -->
+        <AppSelect Label="Division" 
+                   Placeholder="Select Division"
+                   Items="@Divisions.Select(div => new AppSelect.SelectOption { Text = div.Name, Value = div.Id })"
+                   SelectedValue="@AppState.SelectedDivisionId"
+                   SelectedValueChanged="@OnDivisionChanged" 
+                   Class="w-full" />
 
         <div class="flex flex-col gap-3 mt-4">
             <AppButton Color="AppButton.ButtonColor.Primary" 
@@ -54,11 +57,14 @@
     private List<District> Districts => AppState.SelectedProvinceId.HasValue 
         ? LocationService.GetDistricts(AppState.SelectedProvinceId.Value) 
         : new();
-    private List<Town> Towns => AppState.SelectedDistrictId.HasValue 
-        ? LocationService.GetTowns(AppState.SelectedDistrictId.Value) 
+    private List<Division> Divisions => AppState.SelectedDistrictId.HasValue 
+        ? LocationService.GetDivisions(AppState.SelectedDistrictId.Value) 
+        : new();
+    private List<Town> Towns => AppState.SelectedDivisionId.HasValue 
+        ? LocationService.GetTowns(AppState.SelectedDivisionId.Value) 
         : new();
 
-    private bool CanProceed => AppState.SelectedTownId.HasValue;
+    private bool CanProceed => AppState.SelectedDivisionId.HasValue;
 
     protected override void OnInitialized()
     {
@@ -92,16 +98,27 @@
             AppState.SetDistrict(null);
     }
 
+    private void OnDivisionChanged(object? value)
+    {
+        if (value is int id)
+        {
+            var div = Divisions.FirstOrDefault(x => x.Id == id);
+            AppState.SetDivision(id, div?.Coords, div?.Name);
+        }
+        else
+            AppState.SetDivision(null);
+    }
+
     private void OnTownChanged(object? value)
     {
         if (value is int id)
         {
             var town = LocationService.GetTown(id);
-            AppState.SetTown(id, town?.Coords);
+            AppState.SetTown(id, town?.Coords, town?.Name);
         }
         else
         {
-            AppState.SetTown(null, null);
+            AppState.SetTown(null, null, null);
         }
     }
 
