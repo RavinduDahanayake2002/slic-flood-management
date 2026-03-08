@@ -104,6 +104,7 @@ An intelligent flood risk assessment application for **Sri Lanka Insurance Corpo
 - **Weather Data**: Open-Meteo API (Free for non-commercial use)
 - **Mapping**: OpenStreetMap & Leaflet
 - **Development**: Powered by .NET 8 Blazor
+- **Author**: RavinduDahanayake
 
 ---
 *Developed for Sri Lanka Insurance Corporation (SLIC)*
