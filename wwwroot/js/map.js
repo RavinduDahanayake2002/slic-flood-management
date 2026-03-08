@@ -1,4 +1,4 @@
-export function initMap(elementId, center, zoom, markers) {
+export function initMap(elementId, center, zoom, markers, addSearch = false) {
     const map = L.map(elementId, {
         zoomControl: false
     }).setView([center.lat, center.lng], zoom);
@@ -16,6 +16,22 @@ export function initMap(elementId, center, zoom, markers) {
             L.marker([m.lat, m.lng]).addTo(map)
                 .bindPopup(m.popup);
         });
+    }
+
+    if (addSearch && L.Control.Geocoder) {
+        var geocoder = L.Control.geocoder({
+            defaultMarkGeocode: false,
+            position: 'topleft'
+        }).on('markgeocode', function (e) {
+            var latlng = e.geocode.center;
+
+            // Fire map click event programmatically so our blazor code picks it up
+            map.fireEvent('click', {
+                latlng: latlng
+            });
+
+            map.setView(latlng, 12);
+        }).addTo(map);
     }
 
     // Use ResizeObserver to ensure map checks its size whenever the container changes

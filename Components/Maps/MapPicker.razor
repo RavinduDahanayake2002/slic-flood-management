@@ -26,7 +26,7 @@
                 center = new { lat = AppState.SelectedLatLng.Lat, lng = AppState.SelectedLatLng.Lng };
             }
 
-            _mapInstance = await _mapModule.InvokeAsync<IJSObjectReference>("initMap", "picker-map", center, 9, null);
+            _mapInstance = await _mapModule.InvokeAsync<IJSObjectReference>("initMap", "picker-map", center, 9, null, true);
             
             _dotNetHelper = DotNetObjectReference.Create(this);
             await _mapModule.InvokeVoidAsync("addClickEvent", _mapInstance, _dotNetHelper);

@@ -34,18 +34,40 @@
                    SelectedValueChanged="@OnDivisionChanged" 
                    Class="w-full" />
 
+        <!-- OR Manual Coordinates -->
+        <div class="relative flex items-center py-2">
+            <div class="flex-grow border-t border-[var(--border-color)]"></div>
+            <span class="flex-shrink-0 mx-4 text-secondary text-sm">OR Enter Coordinates</span>
+            <div class="flex-grow border-t border-[var(--border-color)]"></div>
+        </div>
+
+        <div class="flex gap-4">
+            <div class="flex flex-col gap-1 w-1/2">
+                <label class="text-xs text-secondary mb-1">Latitude</label>
+                <input type="number" step="any" placeholder="e.g. 6.9271" 
+                       class="app-input w-full p-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-md text-sm"
+                       @bind="ManualLat" @bind:event="oninput" />
+            </div>
+            <div class="flex flex-col gap-1 w-1/2">
+                <label class="text-xs text-secondary mb-1">Longitude</label>
+                <input type="number" step="any" placeholder="e.g. 79.8612" 
+                       class="app-input w-full p-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-md text-sm"
+                       @bind="ManualLng" @bind:event="oninput" />
+            </div>
+        </div>
+
         <div class="flex flex-col gap-3 mt-4">
             <AppButton Color="AppButton.ButtonColor.Primary" 
                        Disabled="@(!CanProceed)"
                        OnClick="@CheckRisk">
-                Check Risk
+                Check Risk for Selected Location
             </AppButton>
             
             <div class="text-center text-secondary text-sm">OR</div>
             
             <AppButton Variant="AppButton.ButtonVariant.Outline" 
                        Color="AppButton.ButtonColor.Neutral"
-                       OnClick="@(() => Nav.NavigateTo("/choose-on-map"))">
+                       OnClick="GoToMapPicker">
                 Choose on Map    
             </AppButton>
         </div>
@@ -53,6 +75,11 @@
 </div>
 
 @code {
+    private void GoToMapPicker()
+    {
+        AppState.SetExplicitLocation(null);
+        Nav.NavigateTo("/choose-on-map");
+    }
     private List<Province> Provinces => LocationService.GetProvinces();
     private List<District> Districts => AppState.SelectedProvinceId.HasValue 
         ? LocationService.GetDistricts(AppState.SelectedProvinceId.Value) 
@@ -64,7 +91,10 @@
         ? LocationService.GetTowns(AppState.SelectedDivisionId.Value) 
         : new();
 
-    private bool CanProceed => AppState.SelectedDivisionId.HasValue;
+    private bool CanProceed => AppState.SelectedDivisionId.HasValue || (ManualLat.HasValue && ManualLng.HasValue);
+
+    private double? ManualLat;
+    private double? ManualLng;
 
     protected override void OnInitialized()
     {
@@ -124,6 +154,12 @@
 
     private void CheckRisk()
     {
+        // If they provided manual lat/lng, prioritize it
+        if (ManualLat.HasValue && ManualLng.HasValue)
+        {
+            AppState.SetExplicitLocation(new LatLng(ManualLat.Value, ManualLng.Value));
+        }
+
         Nav.NavigateTo("/risk");
     }
 }
