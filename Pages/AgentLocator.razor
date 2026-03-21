@@ -6,8 +6,8 @@
 
 <div class="agent-page flex flex-col h-screen overflow-hidden">
     <!-- Header Area -->
-    <div class="header-section shrink-0 z-20 pt-4">
-        <div class="container mx-auto px-6">
+    <div class="header-section shrink-0 relative z-50 pt-4">
+        <div class="container mx-auto px-6 relative z-50">
             <AppButton Variant="AppButton.ButtonVariant.Ghost" 
                        Color="AppButton.ButtonColor.Neutral"
                        OnClick="@GoBack"
@@ -140,6 +140,7 @@
     
     // JS Module
     private IJSObjectReference? mapModule;
+    private IJSObjectReference? mapInstance;
 
     private string _selectedProvince = "All";
     private string selectedProvince
@@ -172,16 +173,16 @@
             mapModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/map.js");
             
             // Initialize map centered on SL roughly
-            await mapModule.InvokeVoidAsync("initMap", "agent-locator-map", new { lat = 7.8731, lng = 80.7718 }, 7, null);
+            mapInstance = await mapModule.InvokeAsync<IJSObjectReference>("initMap", "agent-locator-map", new { lat = 7.8731, lng = 80.7718 }, 7, null);
             
             await ReDrawMap();
         }
     }
 
-    private async void ApplyFilters()
+    private async Task ApplyFilters()
     {
         filteredAgents = AgentService.SearchAgents(_searchTerm, _selectedProvince, userLat, userLng);
-        if (mapModule != null)
+        if (mapModule != null && mapInstance != null)
         {
             await ReDrawMap();
         }
@@ -190,28 +191,28 @@
 
     private async Task ReDrawMap()
     {
-        if (mapModule == null) return;
+        if (mapModule == null || mapInstance == null) return;
 
         // Clear existing
-        await mapModule.InvokeVoidAsync("clearAgentMap", "agent-locator-map");
+        try { await mapModule.InvokeVoidAsync("clearAgentMap", mapInstance); } catch { }
 
         // Add agents
         foreach(var agent in filteredAgents)
         {
             var pContent = $"<b>{agent.Name}</b><br>{agent.Phone}<br>{agent.Address}";
-            await mapModule.InvokeVoidAsync("addAgentMarker", "agent-locator-map", agent.Latitude, agent.Longitude, agent.Type, pContent);
+            try { await mapModule.InvokeVoidAsync("addAgentMarker", mapInstance, agent.Latitude, agent.Longitude, agent.Type, pContent); } catch { }
         }
 
         // Draw User logic
         if (userLat.HasValue && userLng.HasValue)
         {
-            await mapModule.InvokeVoidAsync("addUserLocation", "agent-locator-map", userLat.Value, userLng.Value);
+            try { await mapModule.InvokeVoidAsync("addUserLocation", mapInstance, userLat.Value, userLng.Value); } catch { }
             
             // Draw line to nearest agent if there's any
             if (filteredAgents.Any())
             {
                 var nearest = filteredAgents.First();
-                await mapModule.InvokeVoidAsync("drawRouteLine", "agent-locator-map", userLat.Value, userLng.Value, nearest.Latitude, nearest.Longitude);
+                try { await mapModule.InvokeVoidAsync("drawRouteLine", mapInstance, userLat.Value, userLng.Value, nearest.Latitude, nearest.Longitude); } catch { }
             }
         }
     }
@@ -219,9 +220,9 @@
     private async Task SelectAgent(SlicAgent agent)
     {
         selectedAgentId = agent.Id;
-        if (mapModule != null)
+        if (mapModule != null && mapInstance != null)
         {
-            await mapModule.InvokeVoidAsync("setView", "agent-locator-map", agent.Latitude, agent.Longitude, 12);
+            try { await mapModule.InvokeVoidAsync("setView", mapInstance, agent.Latitude, agent.Longitude, 12); } catch { }
         }
     }
 
@@ -259,7 +260,7 @@
         }
     }
 
-    private void GoBack() => Nav.NavigateTo("/");
+    private void GoBack() => Nav.NavigateTo("/location");
 }
 
 <style>

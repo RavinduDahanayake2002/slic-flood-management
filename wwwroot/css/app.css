@@ -128,3 +128,8 @@ h6 {
         box-shadow: 0 0 0 0 transparent;
     }
 }
+
+/* Remove focus outline from h1 applied by Blazor's FocusOnNavigate */
+h1:focus {
+    outline: none;
+}

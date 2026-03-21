@@ -22,6 +22,7 @@ builder.Services.AddScoped<WeatherService>();
 builder.Services.AddSingleton<HistoricalDataService>();
 builder.Services.AddSingleton<MLPredictionService>();
 builder.Services.AddScoped<AIFloodPredictor>();
+builder.Services.AddHttpClient<GeocodingService>();
 
 
 var app = builder.Build();

@@ -2,11 +2,10 @@
 @using FloodApp.State
 @using FloodApp.Models
 @using FloodApp.Components.UI
-@using System.Text.Json
 @inject LocationService LocationService
 @inject AppState AppState
 @inject NavigationManager Nav
-@inject IHttpClientFactory HttpClientFactory
+@inject GeocodingService GeocodingService
 
 <div class="location-form flex flex-col gap-4">
     <Panel Class="flex flex-col gap-6">
@@ -42,7 +41,7 @@
         <div class="app-input-group">
             <label class="app-input-label">Full Address</label>
             <textarea class="app-textarea" 
-                      placeholder="Example: 71/2 malgahakoratruwa sitinamauwa beliatta"
+                      placeholder="Example: No 21 Vauxhall Street, Colombo 00200, Sri Lanka"
                       @bind="addressText"
                       @bind:event="oninput"></textarea>
             @if (!string.IsNullOrEmpty(_geocodeError))
@@ -163,34 +162,24 @@
         {
             _isGeocoding = true;
             StateHasChanged();
-            
-            try 
+
+            try
             {
-                var client = HttpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Add("User-Agent", "SLICFloodManagementApp/1.0");
-                
-                var url = $"https://nominatim.openstreetmap.org/search?q={Uri.EscapeDataString(addressText + ", Sri Lanka")}&format=json&limit=1";
-                var result = await client.GetFromJsonAsync<JsonElement[]>(url);
-                
-                if (result != null && result.Length > 0)
+                var geocoded = await GeocodingService.GeocodeAsync(addressText);
+
+                if (geocoded == null)
                 {
-                    var latStr = result[0].GetProperty("lat").GetString();
-                    var lonStr = result[0].GetProperty("lon").GetString();
-                    
-                    if (double.TryParse(latStr, out double lat) && double.TryParse(lonStr, out double lon))
-                    {
-                        AppState.SetFullAddress(addressText);
-                        AppState.SetCustomLocation(new LatLng(lat, lon), addressText);
-                        Nav.NavigateTo("/risk");
-                    }
-                    else
-                    {
-                        _geocodeError = "Could not parse coordinates from the address.";
-                    }
+                    _geocodeError = "Address not found. Please try a more specific address (e.g. \"No 21 Vauxhall Street, Colombo\") or use the dropdowns.";
+                }
+                else if (!GeocodingService.IsInSriLanka(geocoded.Lat, geocoded.Lon))
+                {
+                    _geocodeError = "⚠️ The address found is outside Sri Lanka. Please enter a valid Sri Lankan address.";
                 }
                 else
                 {
-                    _geocodeError = "Address not found. Please try a different address or use the dropdowns.";
+                    AppState.SetFullAddress(addressText);
+                    AppState.SetCustomLocation(new LatLng(geocoded.Lat, geocoded.Lon), addressText);
+                    Nav.NavigateTo("/risk");
                 }
             }
             catch (Exception ex)
