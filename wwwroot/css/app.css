@@ -1,11 +1,11 @@
 :root {
-    --bg-primary: #111827;
-    --bg-secondary: #1F2937;
-    --text-primary: #F9FAFB;
-    --text-secondary: #9CA3AF;
-    --accent: #8B5CF6;
-    --accent-hover: #7C3AED;
-    --border-color: #374151;
+    --bg-primary: #030707;
+    --bg-secondary: #091414;
+    --text-primary: #E0F2F2;
+    --text-secondary: #8BA8A8;
+    --accent: #0BFFFF;
+    --accent-hover: #00E5FF;
+    --border-color: #1F3A3A;
     --danger: #EF4444;
     --success: #10B981;
     --warning: #F59E0B;
