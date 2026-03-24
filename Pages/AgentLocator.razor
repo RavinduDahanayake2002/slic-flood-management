@@ -146,14 +146,14 @@
     private string selectedProvince
     {
         get => _selectedProvince;
-        set { _selectedProvince = value; ApplyFilters(); }
+        set { _selectedProvince = value; _ = ApplyFilters(); }
     }
 
     private string _searchTerm = "";
     private string searchTerm
     {
         get => _searchTerm;
-        set { _searchTerm = value; ApplyFilters(); }
+        set { _searchTerm = value; _ = ApplyFilters(); }
     }
 
     private double? userLat;
@@ -161,9 +161,9 @@
     private bool isLocating = false;
     private string selectedAgentId = "";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        ApplyFilters();
+        await ApplyFilters();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -245,7 +245,7 @@
                 // Clear filters when auto-locating
                 _selectedProvince = "All";
                 _searchTerm = "";
-                ApplyFilters(); // Will redraw automatically
+                await ApplyFilters(); // Will redraw automatically
             }
         }
         catch (Exception)

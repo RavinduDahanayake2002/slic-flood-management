@@ -349,9 +349,8 @@
 
 @code {
     private bool IsCalculating = true;
-    private string? _aiReportMarkdown;
-    private MLDivisionPrediction? _mlPrediction;
     private (string ZoneName, double DistanceKm)? NearestSafeZone;
+
     private List<Shelter> NearbyShelters = new();
     private double _currentRainfall = 0;
     private string _activeTab = "Weather";
