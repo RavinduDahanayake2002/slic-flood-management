@@ -12,26 +12,62 @@
             <h2>Instant Quote</h2>
             <p>Enter your details below to receive an estimated insurance premium rating based on Flood and Landslide risks.</p>
             
-            <div class="form-placeholder">
+            <div class="calculation-form">
                 <div class="input-row">
                     <div class="input-group">
                         <label>Property Value (LKR)</label>
-                        <div class="fake-input">1,000,000</div>
+                        <input type="number" @bind="_propertyValue" @bind:event="oninput" placeholder="Enter property value" class="dark-input" />
                     </div>
                 </div>
-                <button class="btn-calc">Calculate Premium</button>
+                
+                <div class="input-row mt-4">
+                    <div class="input-group">
+                        <label>Risk Rating</label>
+                        <select @bind="_selectedRate" class="dark-input">
+                            <option value="2.0">Low (2%)</option>
+                            <option value="4.0">Medium (4%)</option>
+                            <option value="6.0">High (6%)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="info-box mt-4 @RiskLevelClass">
+                    <span class="risk-label">Rating: @RiskLevelText</span>
+                </div>
             </div>
         </div>
 
-        <div class="results-card">
+        <div class="results-card @RiskLevelClass">
             <div class="total-premium">
                 <span class="label">Estimated Yearly Premium</span>
-                <span class="value">Rs. 12,500.00*</span>
+                <span class="value">Rs. @FormattedPremium*</span>
             </div>
             <p class="disclaimer">*Subject to full survey and verification.</p>
         </div>
     </div>
 </div>
+
+@code {
+    private double _propertyValue = 1000000;
+    private double _selectedRate = 2.0;
+
+    private double CalculatedPremium => _propertyValue * (_selectedRate / 100);
+    private string FormattedPremium => CalculatedPremium.ToString("N2");
+
+    private string RiskLevelText => _selectedRate switch
+    {
+        >= 6.0 => "High",
+        >= 4.0 => "Medium",
+        _ => "Low"
+    };
+
+    private string RiskLevelClass => _selectedRate switch
+    {
+        >= 6.0 => "risk-high",
+        >= 4.0 => "risk-medium",
+        _ => "risk-normal"
+    };
+}
 
 <style>
     .page-container {
@@ -66,40 +102,86 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 2rem;
         border-radius: 20px;
+        transition: all 0.3s ease;
     }
 
-    .btn-calc {
+    .calculation-form {
+        margin-top: 1.5rem;
+    }
+
+    .input-group label {
+        display: block;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0.5rem;
+    }
+
+    .dark-input {
         width: 100%;
-        background: var(--accent);
-        color: black;
-        border: none;
-        padding: 1rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 0.75rem 1rem;
         border-radius: 8px;
-        font-weight: 700;
-        margin-top: 2rem;
-        opacity: 0.5;
-        cursor: not-allowed;
+        outline: none;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .dark-input:focus {
+        border-color: var(--accent);
+    }
+
+    select.dark-input option {
+        background: #030707;
+        color: white;
     }
 
     .total-premium {
         text-align: center;
-        padding: 2rem;
-        background: rgba(23, 180, 183, 0.1);
+        padding: 2.5rem 1rem;
         border-radius: 16px;
-        border: 1px solid var(--accent);
+        transition: all 0.3s ease;
     }
 
     .total-premium .label {
         display: block;
         font-size: 0.9rem;
-        color: var(--accent);
         margin-bottom: 0.5rem;
+        opacity: 0.8;
     }
 
     .total-premium .value {
-        font-size: 2rem;
+        font-size: 2.25rem;
         font-weight: 700;
         color: white;
+    }
+
+    /* Risk Specific Styles */
+    .risk-normal .total-premium {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid #22c55e;
+    }
+    .risk-normal .risk-label, .risk-normal .label { color: #4ade80; }
+    
+    .risk-medium .total-premium {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid #f59e0b;
+    }
+    .risk-medium .risk-label, .risk-medium .label { color: #fbbf24; }
+
+    .risk-high .total-premium {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid #ef4444;
+    }
+    .risk-high .risk-label, .risk-high .label { color: #f87171; }
+
+    .info-box {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.05);
     }
 
     .disclaimer {
@@ -109,12 +191,7 @@
         margin-top: 1rem;
     }
 
-    .fake-input {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 0.75rem;
-        border-radius: 8px;
-        color: rgba(255, 255, 255, 0.3);
-    }
+    .mt-4 { margin-top: 1rem; }
 
     @@media (max-width: 900px) {
         .calc-grid {
