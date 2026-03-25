@@ -10,7 +10,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <img src="slic-logo.png" alt="SLIC" class="sidebar-logo" />
+            <img src="slic-logo-square.png" alt="SLIC" class="sidebar-logo" />
             <h3>Admin Space</h3>
         </div>
         <nav class="sidebar-nav">
@@ -121,6 +121,15 @@
                 <div class="panel-header">
                     <h3>Recent Damage Reports</h3>
                     <div class="actions">
+                        <div class="filter-group">
+                            <label class="text-secondary text-sm">Rating Filter:</label>
+                            <select class="form-select filter-select" @onchange="OnRatingFilterChanged">
+                                <option value="All">All Ratings</option>
+                                <option value="High">High (&gt; 5%)</option>
+                                <option value="Medium">Medium (3% - 5%)</option>
+                                <option value="Normal">Normal (&lt; 3%)</option>
+                            </select>
+                        </div>
                         <AppButton Variant="AppButton.ButtonVariant.Outline" Size="AppButton.ButtonSize.Small" OnClick="ExportCsv">
                            <Icon SvgContent='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" fill="none" stroke-width="2"></path><polyline points="7 10 12 15 17 10" stroke="currentColor" fill="none" stroke-width="2"></polyline><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"></line>' />
                            Export CSV
@@ -135,6 +144,7 @@
                                 <th>Date/Time</th>
                                 <th>Customer Name</th>
                                 <th>Address</th>
+                                <th>Damage Rating</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -147,6 +157,12 @@
                                     <td>@claim.ReportedAt.ToLocalTime().ToString("MMM dd, HH:mm")</td>
                                     <td>@claim.FullName</td>
                                     <td>@claim.Address</td>
+                                    <td>
+                                        <div class="rating-cell">
+                                            <span class="badge rating-badge @claim.DamageLabel.ToLower()">@claim.DamageLabel</span>
+                                            <span class="rate-value">@claim.DamageRate.ToString("0.0")%</span>
+                                        </div>
+                                    </td>
                                     <td>
                                         <span class="badge @claim.Status.ToLower()">@claim.Status</span>
                                     </td>
@@ -174,6 +190,7 @@
     private Dictionary<string, int> Summary = new();
     private string _forecastLevel = "Medium";
     private int _forecastVolume = 15;
+    private string _ratingFilter = "All";
 
     protected override void OnInitialized()
     {
@@ -228,8 +245,23 @@
 
     private void RefreshData()
     {
-        Claims = adminService.GetAllClaims();
+        var allClaims = adminService.GetAllClaims();
         Summary = adminService.GetClaimsStatusSummary();
+
+        if (_ratingFilter == "All")
+        {
+            Claims = allClaims;
+        }
+        else
+        {
+            Claims = allClaims.Where(c => c.DamageLabel == _ratingFilter).ToList();
+        }
+    }
+
+    private void OnRatingFilterChanged(ChangeEventArgs e)
+    {
+        _ratingFilter = e.Value?.ToString() ?? "All";
+        RefreshData();
     }
 
     private void UpdateStatus(string id, string newStatus)
@@ -482,6 +514,12 @@
 
     .panel-header h3 { margin: 0; font-size: 1.1rem; }
 
+    .actions {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
     .charts-row {
         display: flex;
         flex-direction: column;
@@ -565,6 +603,36 @@
     }
     
     .form-select:focus { border-color: var(--color-teal); }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-select {
+        min-width: 140px;
+    }
+
+    .rating-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .rate-value {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-family: monospace;
+    }
+
+    .badge.rating-badge {
+        width: fit-content;
+    }
+
+    .badge.high { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); }
+    .badge.medium { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); }
+    .badge.normal { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); }
 
     /* Forecast Widget */
     .forecast-panel {
