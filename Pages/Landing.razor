@@ -45,10 +45,10 @@
 
 <style>
     :root {
-        --color-navy: #030707;
-        --color-teal: #0E8A8D;
-        --color-teal-light: #40E0D0;
-        --color-white: #E0F2F2;
+        --color-navy: var(--bg-dark);
+        --color-teal: var(--color-teal-mid);
+        --color-teal-light: var(--color-teal-top);
+        --color-white: #ffffff;
         --glass-bg: rgba(255, 255, 255, 0.05);
         --glass-border: rgba(255, 255, 255, 0.1);
         --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -76,7 +76,8 @@
     .bg-gradient {
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, #030707 0%, #091414 100%);
+        background: var(--gradient-teal);
+        opacity: 0.15;
         z-index: 0;
     }
 
@@ -110,7 +111,7 @@
     .blob-2 {
         width: 300px;
         height: 300px;
-        background: #086668; /* Darker teal accent */
+        background: var(--color-teal-bottom); /* Darker teal accent */
         bottom: -50px;
         right: -50px;
         animation-delay: -5s;
@@ -218,7 +219,7 @@
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #0BFFFF 0%, #00838F 100%); /* Updated gradient */
+        background: var(--gradient-teal); /* Updated gradient */
         color: white;
         border: none;
         padding: 0.875rem 2rem;
@@ -254,7 +255,7 @@
     .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        background: linear-gradient(135deg, #0E8A8D 0%, #0a5f61 100%);
+        filter: brightness(90%);
     }
 
     .btn-primary:active {

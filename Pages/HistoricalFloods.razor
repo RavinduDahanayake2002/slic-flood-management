@@ -279,8 +279,8 @@
     }
     
     .glass-input:focus {
-        border-color: #2dd4bf;
-        box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
+        border-color: var(--color-teal-mid);
+        box-shadow: 0 0 0 2px rgba(0, 178, 170, 0.2);
     }
     
     .glass-input option {
@@ -316,7 +316,7 @@
         top: 0;
         bottom: 0;
         width: 2px;
-        background: linear-gradient(to bottom, rgba(45, 212, 191, 0.5), rgba(124, 58, 237, 0.2));
+        background: linear-gradient(to bottom, var(--color-teal-top), rgba(124, 58, 237, 0.2));
         border-radius: 1px;
     }
 
@@ -366,13 +366,13 @@
     .border-teal-500 { border-color: var(--accent); }
 
     .cta-gradient {
-        background: linear-gradient(135deg, rgba(17, 94, 89, 0.8) 0%, rgba(13, 148, 136, 0.6) 100%);
-        border: 1px solid rgba(45, 212, 191, 0.3);
+        background: var(--gradient-teal);
+        border: 1px solid rgba(0, 178, 170, 0.3);
     }
 
     .cta-btn {
         background: white;
-        color: #0d9488;
+        color: var(--color-teal-bottom);
         padding: 0.75rem 1.5rem;
         border-radius: 0.5rem;
         font-weight: 700;
